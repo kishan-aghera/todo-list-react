@@ -1,44 +1,46 @@
-import { useState } from "react";
+import { useReducer } from "react";
 import Task from "./components/Task";
 import TaskForm from "./components/TaskForm";
+import reducer from "./reducers";
+import {
+  addTodo,
+  deleteTodo,
+  updateId,
+  updateIsEdit,
+  updateTodo,
+  updateTodoForm,
+  initialState,
+} from "./constants";
 
 const App = () => {
-  const [todos, setTodos] = useState([]);
-  const [todo, setTodo] = useState("");
-  const [isEdit, setIsEdit] = useState(false);
-  const [id, setId] = useState(-1);
+  const [state, dispatch] = useReducer(reducer, initialState);
 
   const submitHandler = (e) => {
     e.preventDefault();
-    if (todo !== "") {
-      if (isEdit) {
-        const updatedTodos = todos.map((t, i) => {
-          return i == id ? todo : t;
-        });
-        setTodos(updatedTodos);
-        setIsEdit(false);
+    if (state.todo !== "") {
+      if (state.isEdit) {
+        dispatch(updateTodo(state.todo, state.id));
+        dispatch(updateIsEdit(false));
       } else {
-        const newTodos = [...todos, [todo]];
-        setTodos(newTodos);
+        dispatch(addTodo(state.todo));
       }
-      setTodo("");
+      dispatch(updateTodoForm(""));
     }
   };
 
   const changeHandler = (e) => {
-    setTodo(e.target.value);
+    dispatch(updateTodoForm(e.target.value));
   };
 
   const deleteHandler = (i) => {
-    const updatedTodos = todos.filter((todo, index) => i !== index);
-    setTodos(updatedTodos);
+    dispatch(deleteTodo(i));
   };
 
   const editHandler = (i) => {
-    setIsEdit(true);
-    setId(i);
-    const oldTodo = todos.filter((t, ind) => ind == i);
-    setTodo(oldTodo);
+    dispatch(updateIsEdit(true));
+    dispatch(updateId(i));
+    const oldTodo = state.todos.filter((t) => t.id === i)[0].todo;
+    dispatch(updateTodoForm(oldTodo));
   };
 
   return (
@@ -47,20 +49,20 @@ const App = () => {
 
       <div className="max-w-4xl mx-auto p-6 space-y-6">
         <TaskForm
-          todo={todo}
+          todo={state.todo}
           changeHandler={changeHandler}
-          isEdit={isEdit}
+          isEdit={state.isEdit}
           submitHandler={submitHandler}
         />
       </div>
 
       <div className="max-w-4xl mx-auto p-6 flex flex-col justify-between space-y-4">
-        {todos &&
-          todos.map((todo, index) => (
+        {state.todos &&
+          state.todos.map((todo) => (
             <Task
-              key={index}
-              todo={todo}
-              index={index}
+              key={todo.id}
+              todo={todo.todo}
+              index={todo.id}
               editHandler={editHandler}
               deleteHandler={deleteHandler}
             />
